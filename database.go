@@ -7,4 +7,5 @@ type ITransactionDatabase interface {
 	Find(id string) (*models.TransactionModel, error)
 	Create(transaction *models.TransactionModel) (*models.TransactionModel, error)
 	Update(id string, transaction *models.TransactionModel) (*models.TransactionModel, error)
+	Close()
 }

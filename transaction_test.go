@@ -10,7 +10,7 @@ import (
 
 func TestCanRunTransactionOrchestrator(t *testing.T) {
 	transport, err := NewTransactionTransport(TransactionTransportConnectionSetting{
-		URL:   "amqp://guest:guest@localhost:15672",
+		URL:   "amqp://guest:guest@localhost:5672",
 		Queue: GetDefaultQueueSetting("cubequeue"),
 	})
 	assert.Nil(t, err)
@@ -51,7 +51,8 @@ func TestCanRunTransactionOrchestrator(t *testing.T) {
 		},
 	}, transport, database)
 	assert.NotNil(t, orchestrator)
-	transport.Subscribe(RoutingTable{
+	go orchestrator.Run(RoutingTable{
 		"invoice.create": GetDefaultRoutingHandler(),
 	}, GetDefaultSubscribeSettings("cubequeue"))
+	orchestrator.Close()
 }

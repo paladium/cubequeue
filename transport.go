@@ -122,7 +122,7 @@ func (transport TransactionTransport) Publish(queue string, message amqp.Publish
 }
 
 // Subscribe for messages in current queue
-func (transport TransactionTransport) Subscribe(routingTable RoutingTable, settings SubscribeSettings) error {
+func (transport TransactionTransport) subscribe(routingTable RoutingTable, settings SubscribeSettings) error {
 	messages, err := transport.consumer.Consume(
 		settings.Queue,
 		settings.Consumer,
@@ -147,7 +147,7 @@ func (transport TransactionTransport) Subscribe(routingTable RoutingTable, setti
 }
 
 // Close close all connections
-func (transport TransactionTransport) Close() {
+func (transport TransactionTransport) close() {
 	transport.consumer.Close()
 	transport.publisher.Close()
 	transport.connection.Close()

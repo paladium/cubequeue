@@ -28,3 +28,29 @@ func (transactionConfig TransactionConfig) FindServiceByName(name string) (*Tran
 	}
 	return nil, errors.New("Service cannot be found")
 }
+
+// TransactionChain contains each service one by one resolved from a particular transaction type (we only have the names of the services)
+type TransactionChain []TransactionService
+
+// NextService returns the next service to be handled in a transaction
+func (chain TransactionChain) NextService(transaction *TransactionModel) (*TransactionService, error) {
+	latestIndex := len(transaction.Stages) - 1
+	index := latestIndex + 1
+	if index > len(chain)-1 {
+		return nil, errors.New("No more steps")
+	}
+	return &chain[index], nil
+}
+
+// NewTransactionChain makes a new transaction chain based on a particular transaction`s config
+func NewTransactionChain(transactionConfig TransactionConfig, transaction Transaction) (TransactionChain, error) {
+	chain := []TransactionService{}
+	for _, stage := range transaction.Stages {
+		service, err := transactionConfig.FindServiceByName(stage)
+		if err != nil {
+			return nil, errors.Errorf("Cannot find a service by its name %s", stage)
+		}
+		chain = append(chain, *service)
+	}
+	return chain, nil
+}

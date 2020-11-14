@@ -12,6 +12,7 @@ import (
 
 // TransactionMongoDBDatabase implementation of ITransactionDatabase using mongodb database
 type TransactionMongoDBDatabase struct {
+	client                 *mongo.Client
 	db                     *mongo.Database
 	transactionsCollection *mongo.Collection
 }
@@ -19,15 +20,16 @@ type TransactionMongoDBDatabase struct {
 // NewTransactionMongoDBDatabase connects to the database and finds the nessesary collection for storing transactions
 func NewTransactionMongoDBDatabase(url string, db string, collection string) (*TransactionMongoDBDatabase, error) {
 	database := TransactionMongoDBDatabase{}
-	client, err := mongo.NewClient(options.Client().ApplyURI(url))
+	var err error
+	database.client, err = mongo.NewClient(options.Client().ApplyURI(url))
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot connect to the database")
 	}
-	err = client.Connect(context.Background())
+	err = database.client.Connect(context.Background())
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot connect to the database")
 	}
-	database.db = client.Database(db)
+	database.db = database.client.Database(db)
 	database.transactionsCollection = database.db.Collection(collection)
 	return &database, nil
 }
@@ -68,4 +70,9 @@ func (database *TransactionMongoDBDatabase) Update(id string, transaction *model
 		return nil, errors.Wrap(err, "Cannot update the model")
 	}
 	return database.Find(id)
+}
+
+// Close the connection to the database
+func (database *TransactionMongoDBDatabase) Close() {
+	database.client.Disconnect(context.Background())
 }
