@@ -86,6 +86,9 @@ func (transactionOrchestrator *TransactionOrchestrator) genericTransaction(messa
 		}
 	} else {
 		//Otherwise simply ack the current service for the transaction
+		if transaction.State().Service != origin {
+			return nil, errors.Wrapf(errors.New("The service origin does not match the latest stage"), "%s != %s", origin, transaction.State().Service)
+		}
 		transaction, err = transactionOrchestrator.ackCurrentStage(transaction, origin)
 		if err != nil {
 			return nil, err
@@ -142,6 +145,51 @@ func (transactionOrchestrator *TransactionOrchestrator) handleTransaction(messag
 	return nil
 }
 
+func (transactionOrchestrator *TransactionOrchestrator) rollback(transaction *models.TransactionModel) error {
+	//Notify all the previous services about the rollback
+	latestStageIndex := len(transaction.Stages) - 1
+	for i := 0; i < latestStageIndex; i++ {
+		stage := transaction.Stages[i]
+		err := transactionOrchestrator.transport.Publish(stage.Queue, amqp.Publishing{
+			Type: RollbackMessage,
+			Headers: amqp.Table{
+				"error": *transaction.State().Error,
+			},
+			CorrelationId: transaction.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (transactionOrchestrator *TransactionOrchestrator) handleError(message amqp.Delivery) error {
+	transaction, err := transactionOrchestrator.genericTransaction(message)
+	if err != nil {
+		return err
+	}
+	if transaction.State().Error != nil {
+		return errors.New("Latest stage already has an error")
+	}
+	if _, ok := message.Headers["error"]; !ok {
+		return errors.New("Error message not given")
+	}
+	//Set the error on the latest stage and update the transaction in database
+	errorMessage := message.Headers["error"].(string)
+	transaction.SetErrorLatestStage(errorMessage)
+	transaction, err = transactionOrchestrator.database.Update(transaction.ID, transaction)
+	if err != nil {
+		return err
+	}
+	//Finally send the rollback message to all the previous services
+	err = transactionOrchestrator.rollback(transaction)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Run functions goes over each routing table item and wraps the function to persist the transaction and notify other services further
 func (transactionOrchestrator *TransactionOrchestrator) Run(routingTable RoutingTable, settings SubscribeSettings) error {
 	for key, handler := range routingTable {
@@ -158,6 +206,8 @@ func (transactionOrchestrator *TransactionOrchestrator) Run(routingTable Routing
 			return nil
 		}
 	}
+	//Add the error handling route
+	routingTable[ErrorMessage] = transactionOrchestrator.handleError
 	err := transactionOrchestrator.transport.subscribe(routingTable, settings)
 	if err != nil {
 		return err

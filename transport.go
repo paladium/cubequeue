@@ -56,6 +56,8 @@ func GetDefaultRoutingHandler() RoutingTableHandler {
 // Important handlers the routing table
 const (
 	NoHandlerMessage = "no_handler"
+	ErrorMessage     = "error"
+	RollbackMessage  = "rollback"
 )
 
 // SubscribeSettings contains settings when subscribing to the queue

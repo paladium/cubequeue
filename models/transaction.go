@@ -63,3 +63,16 @@ func (transaction *TransactionModel) AckLatestStage() {
 	}
 	transaction.Stages[currentIndex].Ack = true
 }
+
+// SetErrorLatestStage sets the error on the latest stage
+func (transaction *TransactionModel) SetErrorLatestStage(errorMessage string) {
+	latestStageOrder := 0
+	currentIndex := 0
+	for index, stage := range transaction.Stages {
+		if stage.Order > latestStageOrder {
+			latestStageOrder = stage.Order
+			currentIndex = index
+		}
+	}
+	transaction.Stages[currentIndex].Error = &errorMessage
+}
