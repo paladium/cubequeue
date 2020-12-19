@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/paladium/cubequeue/models"
 	"github.com/streadway/amqp"
@@ -208,6 +209,7 @@ func (transactionOrchestrator *TransactionOrchestrator) Run(routingTable Routing
 	}
 	//Add the error handling route
 	routingTable[ErrorMessage] = transactionOrchestrator.handleError
+	logrus.Debug("Running the orchestrator")
 	err := transactionOrchestrator.transport.subscribe(routingTable, settings)
 	if err != nil {
 		return err
