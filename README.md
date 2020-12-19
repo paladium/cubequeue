@@ -81,4 +81,4 @@ Apache 2.0
 
 TODO:
 - More message queues
-- Client library to work with the orchestrator
+- Client library (same repo) to work with the orchestrator
