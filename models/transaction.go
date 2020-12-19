@@ -14,15 +14,15 @@ type TransactionStageModel struct {
 
 // TransactionModel represents a single transaction that keeps track of its stages
 type TransactionModel struct {
-	ID      string
+	ID      string `bson:"_id"`
 	Type    string
-	Payload interface{}
+	Payload map[string]interface{}
 	Stages  []TransactionStageModel
 }
 
 // State returns the latest stage for the transaction
 func (transaction *TransactionModel) State() TransactionStageModel {
-	latestStageOrder := 0
+	latestStageOrder := -1
 	latestStage := TransactionStageModel{}
 	for _, stage := range transaction.Stages {
 		if stage.Order > latestStageOrder {

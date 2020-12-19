@@ -61,7 +61,7 @@ func (transactionOrchestrator *TransactionOrchestrator) genericTransaction(messa
 	transaction, err := transactionOrchestrator.database.Find(message.CorrelationId)
 	if err != nil {
 		//For now only work with json type
-		var body interface{}
+		var body map[string]interface{}
 		err = json.Unmarshal(message.Body, &body)
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot unmarshal the body")

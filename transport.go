@@ -2,6 +2,7 @@ package cubequeue
 
 import (
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -113,7 +114,7 @@ func NewTransactionTransport(connectionSetting TransactionTransportConnectionSet
 }
 
 // Publish a message to a given queue
-func (transport TransactionTransport) Publish(queue string, message amqp.Publishing) error {
+func (transport *TransactionTransport) Publish(queue string, message amqp.Publishing) error {
 	err := transport.publisher.Publish("", queue, false, false, message)
 	if err != nil {
 		return errors.Wrap(err, "Cannot publish a message to the queue")
@@ -122,7 +123,7 @@ func (transport TransactionTransport) Publish(queue string, message amqp.Publish
 }
 
 // Subscribe for messages in current queue
-func (transport TransactionTransport) subscribe(routingTable RoutingTable, settings SubscribeSettings) error {
+func (transport *TransactionTransport) subscribe(routingTable RoutingTable, settings SubscribeSettings) error {
 	messages, err := transport.consumer.Consume(
 		settings.Queue,
 		settings.Consumer,
@@ -138,16 +139,22 @@ func (transport TransactionTransport) subscribe(routingTable RoutingTable, setti
 	for message := range messages {
 		if _, ok := routingTable[message.Type]; !ok {
 			//No handler for the message, then use the no_handler handler
-			routingTable[NoHandlerMessage](message)
+			err = routingTable[NoHandlerMessage](message)
+			if err != nil {
+				logrus.WithError(err).WithField("message", message).Error("Error happened during transaction execution")
+			}
 		} else {
-			routingTable[message.Type](message)
+			err = routingTable[message.Type](message)
+			if err != nil {
+				logrus.WithError(err).WithField("message", message).Error("Error happened during transaction execution")
+			}
 		}
 	}
 	return nil
 }
 
 // Close close all connections
-func (transport TransactionTransport) close() {
+func (transport *TransactionTransport) close() {
 	transport.consumer.Close()
 	transport.publisher.Close()
 	transport.connection.Close()

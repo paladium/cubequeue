@@ -76,3 +76,12 @@ func (database *TransactionMongoDBDatabase) Update(id string, transaction *model
 func (database *TransactionMongoDBDatabase) Close() {
 	database.client.Disconnect(context.Background())
 }
+
+// DeleteDatabase drops the database
+func (database *TransactionMongoDBDatabase) DeleteDatabase() error {
+	err := database.db.Drop(context.Background())
+	if err != nil {
+		return errors.Wrap(err, "Cannot delete the database")
+	}
+	return nil
+}
