@@ -155,11 +155,18 @@ So you can plug this code like the following:
 - The transaction service will take care of publishing it to other services or you can set only one service for that transaction (so that no more services get notified)
 - You can now override the custom logic in transaction service to send a Slack message to your channel where you can view the invoice. It is a perfect place for it, as it does nothing to user experience and is useful for debugging and logging.
 
+## More examples
+You can find more examples of using cubequeue in ```examples/``` folder:
+
+- [Starter](./examples/client-starter/main.go)
+- [Custom handler](./examples/client-custom-handler/main.go)
+
+
 ## License
 Apache 2.0
 
 ## Contributing
-I am welcome to any suggestions on how to improve this transaction service and welcome any contributions to the project.
+I am opened to any suggestions on how to improve this transaction service and welcome any contributions to the project.
 
 TODO:
 - More message queues
