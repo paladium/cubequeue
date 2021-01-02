@@ -139,6 +139,7 @@ func (transport *TransactionTransport) Subscribe(routingTable RoutingTable, sett
 		return errors.Wrap(err, "Cannot register a consumer")
 	}
 	for message := range messages {
+		logrus.WithField("message", message).Debug("Received message")
 		if _, ok := routingTable[message.Type]; !ok {
 			//No handler for the message, then use the no_handler handler
 			err = routingTable[NoHandlerMessage](message)
@@ -151,6 +152,7 @@ func (transport *TransactionTransport) Subscribe(routingTable RoutingTable, sett
 				logrus.WithError(err).WithField("message", message).Error("Error happened during transaction execution")
 			}
 		}
+		logrus.WithField("message", message).Debug("Processed message")
 	}
 	return nil
 }
