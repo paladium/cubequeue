@@ -210,7 +210,7 @@ func (transactionOrchestrator *TransactionOrchestrator) Run(routingTable Routing
 	//Add the error handling route
 	routingTable[ErrorMessage] = transactionOrchestrator.handleError
 	logrus.Debug("Running the orchestrator")
-	err := transactionOrchestrator.transport.subscribe(routingTable, settings)
+	err := transactionOrchestrator.transport.Subscribe(routingTable, settings)
 	if err != nil {
 		return err
 	}
@@ -219,6 +219,6 @@ func (transactionOrchestrator *TransactionOrchestrator) Run(routingTable Routing
 
 // Close all connections
 func (transactionOrchestrator *TransactionOrchestrator) Close() {
-	transactionOrchestrator.transport.close()
+	transactionOrchestrator.transport.Close()
 	transactionOrchestrator.database.Close()
 }
