@@ -66,12 +66,6 @@ orchestrator.Run(cubequeue.RoutingTable{
 
 > Note: the Run function will block the current thread, so if you want to run additional code, run it like this:
 ```go
-orchestrator.Run(cubequeue.RoutingTable{
-    "account.create": cubequeue.GetDefaultRoutingHandler(),
-}, cubequeue.GetDefaultSubscribeSettings(queue))
-```
-If you have other services in your orchestrator, you can run the previous code in its own goroutine:
-```go
 go orchestrator.Run(cubequeue.RoutingTable{
     "account.create": cubequeue.GetDefaultRoutingHandler(),
 }, cubequeue.GetDefaultSubscribeSettings(queue))
